@@ -1,390 +1,162 @@
-#edited by HeLLxGodLike all credits goes to team DaisyX
+# Copyright (C) 2021 MoeZilla
 
-import re
+# This file is part of Cutiepii (Telegram Bot)
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import json
+import os
+import html
 import requests
-import emoji
+import SungJinwooRobot.modules.sql.kuki_sql as sql
 
-url = "https://acobot-brainshop-ai-v1.p.rapidapi.com/get"
-import re
+from time import sleep
+from telegram import ParseMode
+from SungJinwooRobot import dispatcher, updater, SUPPORT_CHAT
+from SungJinwooRobot.modules.log_channel import gloggable
+from telegram import Message, Chat, Update, Bot, MessageEntity
+from telegram.error import BadRequest, RetryAfter, Unauthorized
+from telegram.ext import CommandHandler, run_async, CallbackContext, MessageHandler, Filters
+from SungJinwooRobot.modules.helper_funcs.filters import CustomFilters
+from SungJinwooRobot.modules.helper_funcs.chat_status import user_admin
+from telegram.utils.helpers import mention_html, mention_markdown, escape_markdown
 
-import aiohttp
-from googletrans import Translator as google_translator
-# from google_trans_new import google_translator
-from pyrogram import filters
-from SungJinwooRobot import arq
-from SungJinwooRobot.utils.aichat import add_chat, get_session, remove_chat
-from SungJinwooRobot.utils.pluginshelper import admins_only, edit_or_reply
-from SungJinwooRobot import pgram as daisyx
-
-translator = google_translator()
-
-BOT_ID = 1485865042
-
-async def lunaQuery(query: str, user_id: int):
-    luna = await arq.luna(query, user_id)
-    return luna.result
-
-
-def extract_emojis(s):
-    return "".join(c for c in s if c in emoji.UNICODE_EMOJI)
-
-
-async def fetch(url):
-    try:
-        async with aiohttp.Timeout(10.0):
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as resp:
-                    try:
-                        data = await resp.json()
-                    except:
-                        data = await resp.text()
-            return data
-    except:
-        print("AI response Timeout")
-        return
-
-
-daisy_chats = []
-en_chats = []
-# AI Chat (C) 2020-2021 by @InukaAsith
-
-
-@daisyx.on_message(
-    filters.command("chatbot") & ~filters.edited & ~filters.bot & ~filters.private
-)
-@admins_only
-async def hmm(_, message):
-    global daisy_chats
-    if len(message.command) != 2:
-        await message.reply_text(
-            "I only recognize `/chatbot on` and /chatbot `off only`"
+@user_admin
+@gloggable
+def add_chat(update: Update, context: CallbackContext):
+    chat = update.effective_chat
+    msg = update.effective_message
+    user = update.effective_user
+    is_kuki = sql.is_kuki(chat.id)
+    if not is_kuki:
+        sql.set_kuki(chat.id)
+        msg.reply_text("Sung AI successfully enabled for this chat!")
+        message = (
+            f"<b>{html.escape(chat.title)}:</b>\n"
+            f"AI_ENABLED\n"
+            f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
         )
-        message.continue_propagation()
-    status = message.text.split(None, 1)[1]
-    chat_id = message.chat.id
-    if status == "ON" or status == "on" or status == "On":
-        lel = await edit_or_reply(message, "`Processing...`")
-        lol = add_chat(int(message.chat.id))
-        if not lol:
-            await lel.edit("Sung Jinwoo AI Already Activated In This Chat")
-            return
-        await lel.edit(
-            f"Sung Jinwoo AI Successfully Added For Users In The Chat"
-        )
+        return message
+    msg.reply_text("Sung AI is already enabled for this chat!")
+    return ""
 
-    elif status == "OFF" or status == "off" or status == "Off":
-        lel = await edit_or_reply(message, "`Processing...`")
-        Escobar = remove_chat(int(message.chat.id))
-        if not Escobar:
-            await lel.edit("SUNG AI Was Not Activated In This Chat")
-            return
-        await lel.edit(
-            f"Sung Jinwoo AI Successfully Deactivated For Users In The Chat"
-        )
 
-    elif status == "EN" or status == "en" or status == "english":
-        if not chat_id in en_chats:
-            en_chats.append(chat_id)
-            await message.reply_text("English AI chat Enabled!")
-            return
-        await message.reply_text("AI Chat Is Already Disabled.")
-        message.continue_propagation()
+@user_admin
+@gloggable
+def rem_chat(update: Update, context: CallbackContext):
+    msg = update.effective_message
+    chat = update.effective_chat
+    user = update.effective_user
+    is_kuki = sql.is_kuki(chat.id)
+    if not is_kuki:
+        msg.reply_text("Sung AI isn't enabled here in the first place!")
+        return ""
+    sql.rem_kuki(chat.id)
+    msg.reply_text("Sung AI disabled successfully!")
+    message = (
+        f"<b>{html.escape(chat.title)}:</b>\n"
+        f"AI_DISABLED\n"
+        f"<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
+    )
+    return message
+ 
+
+
+
+def kuki_message(context: CallbackContext, message):
+    reply_message = message.reply_to_message
+    if message.text.lower() == "Asuna":
+        return True
+    if reply_message:
+        if reply_message.from_user.id == context.bot.get_me().id:
+            return True
     else:
-        await message.reply_text(
-            "I only recognize `/chatbot on` and /chatbot `off only`"
-        )
+        return False
+        
 
-
-@daisyx.on_message(
-    filters.text
-    & filters.reply
-    & ~filters.bot
-    & ~filters.edited
-    & ~filters.via_bot
-    & ~filters.forwarded,
-    group=2,
-)
-async def hmm(client, message):
-    if not get_session(int(message.chat.id)):
+def chatbot(update: Update, context: CallbackContext):
+    message = update.effective_message
+    chat_id = update.effective_chat.id
+    bot = context.bot
+    is_kuki = sql.is_kuki(chat_id)
+    if not is_kuki:
         return
-    if not message.reply_to_message:
-        return
-    try:
-        senderr = message.reply_to_message.from_user.id
-    except:
-        return
-    if senderr != BOT_ID:
-        return
-    msg = message.text
-    chat_id = message.chat.id
-    if msg.startswith("/") or msg.startswith("@"):
-        message.continue_propagation()
-    if chat_id in en_chats:
-        test = msg
-        test = test.replace("Sung", "Aco")
-        test = test.replace("Sung", "Aco")
-        test = test.replace("I was created by @The_Pirate_Hunter", "I made myself")
-        test = test.replace("Hello there I am SungJinWoo...nice to meet u", "Hi, my friend! Do you want me to tell you a joke?")
-        test = test.replace("@The_Pirate_Huntee is my owner" , "Have the control right.")
-        test = test.replace("Hi, My name is SungJinWoo Nice to meet you." , "Hi, my friend, what can I do for you today?")
-       
-        response = await lunaQuery(
-            test, message.from_user.id if message.from_user else 0
-        )
-        response = response.replace("Aco", "Sung")
-        response = response.replace("aco", "Sung")
-        response = response.replace("I made myself", "I was Created by @The_Pirate_Hunter")
-        response = response.replace("Hi, my friend! Do you want me to tell you a joke?", "Hello there I am SungJinWoo...nice to meet u")
-        response = response.replace("Have the control right." , "@The_Pirate_Hunter is my owner.")
-        response = response.replace("Hi, my friend, what can I do for you today?" , "Hi, My name is SungJinWoo Nice to meet you")
-        pro = response
-        try:
-            await daisyx.send_chat_action(message.chat.id, "typing")
-            await message.reply_text(pro)
-        except CFError:
+	
+    if message.text and not message.document:
+        if not kuki_message(context, message):
             return
+        Message = message.text
+        bot.send_chat_action(chat_id, action="typing")
+        kukiurl = requests.get('https://kuki.up.railway.app/Kuki/chatbot?message='+Message)
+        Kuki = json.loads(kukiurl.text)
+        kuki = Kuki['reply']
+        sleep(0.3)
+        message.reply_text(kuki, timeout=60)
 
-    else:
-        u = msg.split()
-        emj = extract_emojis(msg)
-        msg = msg.replace(emj, "")
-        if (
-            [(k) for k in u if k.startswith("@")]
-            and [(k) for k in u if k.startswith("#")]
-            and [(k) for k in u if k.startswith("/")]
-            and re.findall(r"\[([^]]+)]\(\s*([^)]+)\s*\)", msg) != []
-        ):
-
-            h = " ".join(filter(lambda x: x[0] != "@", u))
-            km = re.sub(r"\[([^]]+)]\(\s*([^)]+)\s*\)", r"", h)
-            tm = km.split()
-            jm = " ".join(filter(lambda x: x[0] != "#", tm))
-            hm = jm.split()
-            rm = " ".join(filter(lambda x: x[0] != "/", hm))
-        elif [(k) for k in u if k.startswith("@")]:
-
-            rm = " ".join(filter(lambda x: x[0] != "@", u))
-        elif [(k) for k in u if k.startswith("#")]:
-            rm = " ".join(filter(lambda x: x[0] != "#", u))
-        elif [(k) for k in u if k.startswith("/")]:
-            rm = " ".join(filter(lambda x: x[0] != "/", u))
-        elif re.findall(r"\[([^]]+)]\(\s*([^)]+)\s*\)", msg) != []:
-            rm = re.sub(r"\[([^]]+)]\(\s*([^)]+)\s*\)", r"", msg)
-        else:
-            rm = msg
-            # print (rm)
+def list_all_chats(update: Update, context: CallbackContext):
+    chats = sql.get_all_kuki_chats()
+    text = "<b>KUKI-Enabled Chats</b>\n"
+    for chat in chats:
         try:
-            lan = translator.detect(rm)
-            lan = lan.lang
-        except:
-            return
-        test = rm
-        if not "en" in lan and not lan == "":
-            try:
-                test = translator.translate(test, dest="en")
-                test = test.text
-            except:
-                return
-        # test = emoji.demojize(test.strip())
-
-        test = test.replace("Sung", "Aco")
-        test = test.replace("Sung", "Aco")
-        test = test.replace("I was created by @The_Pirate_Hunter", "I made myself")
-        test = test.replace("Hello there I am SungJinWoo...nice to meet u", "Hi, my friend! Do you want me to tell you a joke?")
-        test = test.replace("@The_Pirate_Hunter is my owner" , "Have the control right.")
-        test = test.replace("Hi, My name is SungJinWoo Nice to meet you." , "Hi, my friend, what can I do for you today?")
-        response = await lunaQuery(
-            test, message.from_user.id if message.from_user else 0
-        )
-        response = response.replace("Aco", "Sung")
-        response = response.replace("aco", "Sung")
-        response = response.replace("Luna", "Sung")
-        response = response.replace("luna", "Sung")
-        response = response.replace("I made myself", "I was Created by @The_Pirate_Hunter")
-        response = response.replace("Hi, my friend! Do you want me to tell you a joke?", "Hello there I am SungJinWoo...nice to meet u")
-        response = response.replace("Have the control right." , "@The_Pirate_Hunter is my owner.")
-        response = response.replace("Hi, my friend, what can I do for you today?" , "Hi, My name is SungJinWoo Nice to meet you")
-        pro = response
-        if not "en" in lan and not lan == "":
-            try:
-                pro = translator.translate(pro, dest=lan)
-                pro = pro.text
-            except:
-                return
-        try:
-            await daisyx.send_chat_action(message.chat.id, "typing")
-            await message.reply_text(pro)
-        except CFError:
-            return
-
-
-@daisyx.on_message(
-    filters.text & filters.private & ~filters.edited & filters.reply & ~filters.bot
-)
-async def inuka(client, message):
-    msg = message.text
-    if msg.startswith("/") or msg.startswith("@"):
-        message.continue_propagation()
-    u = msg.split()
-    emj = extract_emojis(msg)
-    msg = msg.replace(emj, "")
-    if (
-        [(k) for k in u if k.startswith("@")]
-        and [(k) for k in u if k.startswith("#")]
-        and [(k) for k in u if k.startswith("/")]
-        and re.findall(r"\[([^]]+)]\(\s*([^)]+)\s*\)", msg) != []
-    ):
-
-        h = " ".join(filter(lambda x: x[0] != "@", u))
-        km = re.sub(r"\[([^]]+)]\(\s*([^)]+)\s*\)", r"", h)
-        tm = km.split()
-        jm = " ".join(filter(lambda x: x[0] != "#", tm))
-        hm = jm.split()
-        rm = " ".join(filter(lambda x: x[0] != "/", hm))
-    elif [(k) for k in u if k.startswith("@")]:
-
-        rm = " ".join(filter(lambda x: x[0] != "@", u))
-    elif [(k) for k in u if k.startswith("#")]:
-        rm = " ".join(filter(lambda x: x[0] != "#", u))
-    elif [(k) for k in u if k.startswith("/")]:
-        rm = " ".join(filter(lambda x: x[0] != "/", u))
-    elif re.findall(r"\[([^]]+)]\(\s*([^)]+)\s*\)", msg) != []:
-        rm = re.sub(r"\[([^]]+)]\(\s*([^)]+)\s*\)", r"", msg)
-    else:
-        rm = msg
-        # print (rm)
-    try:
-        lan = translator.detect(rm)
-        lan = lan.lang
-    except:
-        return
-    test = rm
-    if not "en" in lan and not lan == "":
-        try:
-            test = translator.translate(test, dest="en")
-            test = test.text
-        except:
-            return
-
-    # test = emoji.demojize(test.strip())
-
-    # Kang with the credits bitches @InukaASiTH
-    test = test.replace("Sung", "Aco")
-    test = test.replace("Sung", "Aco")
-    test = test.replace("I was created by @The_Pirate_Hunter", "I made myself")
-    test = test.replace("Hello there I am SungJinWoo...nice to meet u", "Hi, my friend! Do you want me to tell you a joke?")
-    test = test.replace("@The_Pirate_Hunter is my owner" , "Have the control right.")
-    test = test.replace("Hi, My name is SungJinWoo Nice to meet you." , "Hi, my friend, what can I do for you today?")
-
-    response = await lunaQuery(test, message.from_user.id if message.from_user else 0)
-    response = response.replace("Aco", "Sung")
-    response = response.replace("aco", "Sung")
-    response = response.replace("I made myself", "I was Created by @The_Pirate_Hunter")
-    response = response.replace("Hi, my friend! Do you want me to tell you a joke?", "Hello there I am SungJinWoo...nice to meet u")
-    response = response.replace("Have the control right." , "@The_Pirate_Hunter is my owner.")
-    response = response.replace("Hi, my friend, what can I do for you today?" , "Hi, My name is SungJinWoo Nice to meet you")
-
-    pro = response
-    if not "en" in lan and not lan == "":
-        pro = translator.translate(pro, dest=lan)
-        pro = pro.text
-    try:
-        await daisyx.send_chat_action(message.chat.id, "typing")
-        await message.reply_text(pro)
-    except CFError:
-        return
-
-
-@daisyx.on_message(
-    filters.regex("SungJinwoo|Sung Jin woo")
-    & ~filters.bot
-    & ~filters.via_bot
-    & ~filters.forwarded
-    & ~filters.reply
-    & ~filters.channel
-    & ~filters.edited
-)
-async def inuka(client, message):
-    msg = message.text
-    if msg.startswith("/") or msg.startswith("@"):
-        message.continue_propagation()
-    u = msg.split()
-    emj = extract_emojis(msg)
-    msg = msg.replace(emj, "")
-    if (
-        [(k) for k in u if k.startswith("@")]
-        and [(k) for k in u if k.startswith("#")]
-        and [(k) for k in u if k.startswith("/")]
-        and re.findall(r"\[([^]]+)]\(\s*([^)]+)\s*\)", msg) != []
-    ):
-
-        h = " ".join(filter(lambda x: x[0] != "@", u))
-        km = re.sub(r"\[([^]]+)]\(\s*([^)]+)\s*\)", r"", h)
-        tm = km.split()
-        jm = " ".join(filter(lambda x: x[0] != "#", tm))
-        hm = jm.split()
-        rm = " ".join(filter(lambda x: x[0] != "/", hm))
-    elif [(k) for k in u if k.startswith("@")]:
-
-        rm = " ".join(filter(lambda x: x[0] != "@", u))
-    elif [(k) for k in u if k.startswith("#")]:
-        rm = " ".join(filter(lambda x: x[0] != "#", u))
-    elif [(k) for k in u if k.startswith("/")]:
-        rm = " ".join(filter(lambda x: x[0] != "/", u))
-    elif re.findall(r"\[([^]]+)]\(\s*([^)]+)\s*\)", msg) != []:
-        rm = re.sub(r"\[([^]]+)]\(\s*([^)]+)\s*\)", r"", msg)
-    else:
-        rm = msg
-        # print (rm)
-    try:
-        lan = translator.detect(rm)
-        lan = lan.lang
-    except:
-        return
-    test = rm
-    if not "en" in lan and not lan == "":
-        try:
-            test = translator.translate(test, dest="en")
-            test = test.text
-        except:
-            return
-
-    # test = emoji.demojize(test.strip())
-
-    test = test.replace("Sung", "Aco")
-    test = test.replace("Sung", "Aco")
-    test = test.replace("I was created by @The_Pirate_hunter", "I made myself")
-    test = test.replace("Hello there I am SungJinWoo...nice to meet u", "Hi, my friend! Do you want me to tell you a joke?")
-    test = test.replace("@The_Pirate_Hunter is my owner" , "Have the control right.")
-    test = test.replace("Hi, My name is SungJinWoo Nice to meet you." , "Hi, my friend, what can I do for you today?")
-
-    response = await lunaQuery(test, message.from_user.id if message.from_user else 0)
-    response = response.replace("Aco", "Sung")
-    response = response.replace("aco", "Sung")
-    response = response.replace("I made myself", "I was Created by @The_Pirate_Hunter")
-    response = response.replace("Hi, my friend! Do you want me to tell you a joke?", "Hello there I am SungJinWoo...nice to meet u")
-    response = response.replace("Have the control right." , "@The_Pirate_Hunter is my owner.")
-    response = response.replace("Hi, my friend, what can I do for you today?" , "Hi, My name is SungJinWoo Nice to meet you")
-
-    pro = response
-    if not "en" in lan and not lan == "":
-        try:
-            pro = translator.translate(pro, dest=lan)
-            pro = pro.text
-        except Exception:
-            return
-    try:
-        await daisyx.send_chat_action(message.chat.id, "typing")
-        await message.reply_text(pro)
-    except CFError:
-        return
+            x = context.bot.get_chat(int(*chat))
+            name = x.title if x.title else x.first_name
+            text += f"• <code>{name}</code>\n"
+        except BadRequest:
+            sql.rem_kuki(*chat)
+        except Unauthorized:
+            sql.rem_kuki(*chat)
+        except RetryAfter as e:
+            sleep(e.retry_after)
+    update.effective_message.reply_text(text, parse_mode="HTML")
+   
 
 __help__ = """
-*IGRIS-X Chatbot Supports many Languages.*
 
- ➢ /chatbot [ON/OFF]: Enables and disables AI Chat mode (EXCLUSIVE)
- ➢ /chatbot EN : Enables English only chatbot
- 
 """
 
 __mod_name__ = "ChatBot"
+
+
+__help__ = """
+Chatbot utilizes the Kuki API and allows Asuna to talk and provides a more interactive group chat experience.
+
+*Commands:* 
+*Admins only:*
+   ➢ `addchat`*:* Enables Chatbot mode in the chat.
+   ➢ `rmchat`*:* Disables Chatbot mode in the chat.
+   
+Reports bugs at @HuntersAssociations
+"""
+
+__mod_name__ = "ChatBot"
+
+ADD_CHAT_HANDLER = CommandHandler("addchat", add_chat)
+REMOVE_CHAT_HANDLER = CommandHandler("rmchat", rem_chat)
+CHATBOT_HANDLER = MessageHandler(
+    Filters.text & (~Filters.regex(r"^#[^\s]+") & ~Filters.regex(r"^!")
+                    & ~Filters.regex(r"^\/")), chatbot)
+LIST_ALL_CHATS_HANDLER = CommandHandler(
+    "allchats", list_all_chats, filters=CustomFilters.dev_filter)
+
+dispatcher.add_handler(ADD_CHAT_HANDLER)
+dispatcher.add_handler(REMOVE_CHAT_HANDLER)
+dispatcher.add_handler(LIST_ALL_CHATS_HANDLER)
+dispatcher.add_handler(CHATBOT_HANDLER)
+
+__handlers__ = [
+    ADD_CHAT_HANDLER,
+    REMOVE_CHAT_HANDLER,
+    LIST_ALL_CHATS_HANDLER,
+    CHATBOT_HANDLER,
+]
