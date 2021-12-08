@@ -30,7 +30,7 @@ def is_sudo_plus(chat: Chat, user_id: int, member: ChatMember = None) -> bool:
 
 
 def is_user_admin(chat: Chat, user_id: int, member: ChatMember = None) -> bool:
-    if (chat.type == 'private' or user_id in DRAGONS or user_id in DEV_USERS or
+    if (chat.type == 'private' or user_id in DRAGONS or user_id in DEV_USERS or is_modd(chat.id, user_id) or
             chat.all_members_are_administrators
         return True
 
@@ -71,7 +71,7 @@ def can_delete(chat: Chat, bot_id: int) -> bool:
 def is_user_ban_protected(chat: Chat,
                           user_id: int,
                           member: ChatMember = None) -> bool:
-    if (chat.type == 'private' or user_id in DRAGONS or user_id in DEV_USERS or
+    if (chat.type == 'private' or user_id in DRAGONS or user_id in DEV_USERS or is_modd(chat.id, user_id) or
             user_id in WOLVES or user_id in TIGERS or
             chat.all_members_are_administrators
         return True
