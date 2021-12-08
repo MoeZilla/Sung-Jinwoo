@@ -1,6 +1,7 @@
 from functools import wraps
 from cachetools import TTLCache
 from threading import RLock
+from SungJinwooRobot.modules.sql.modr_sql import is_modd
 from SungJinwooRobot import (DEL_CMDS, DEV_USERS, DRAGONS, SUPPORT_CHAT, DEMONS,
                           TIGERS, WOLVES, dispatcher)
 
@@ -30,7 +31,7 @@ def is_sudo_plus(chat: Chat, user_id: int, member: ChatMember = None) -> bool:
 
 
 def is_user_admin(chat: Chat, user_id: int, member: ChatMember = None) -> bool:
-    if (chat.type == 'private' or user_id in DRAGONS or user_id in DEV_USERS or
+    if (chat.type == 'private' or user_id in DRAGONS or user_id in DEV_USERS or is_modd(chat.id, user_id) or 
             chat.all_members_are_administrators
         return True
 
