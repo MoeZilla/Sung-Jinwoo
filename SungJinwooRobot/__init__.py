@@ -30,9 +30,7 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 6:
     )
     quit(1)
 
-ENV = bool(os.environ.get('ENV', False))
-
-if ENV:
+if ENV := bool(os.environ.get('ENV', False)):
     TOKEN = os.environ.get('TOKEN', None)
 
     try:
@@ -44,26 +42,26 @@ if ENV:
     OWNER_USERNAME = os.environ.get("OWNER_USERNAME", None)
 
     try:
-        DRAGONS = set(int(x) for x in os.environ.get("DRAGONS", "").split())
-        DEV_USERS = set(int(x) for x in os.environ.get("DEV_USERS", "").split())
+        DRAGONS = {int(x) for x in os.environ.get("DRAGONS", "").split()}
+        DEV_USERS = {int(x) for x in os.environ.get("DEV_USERS", "").split()}
     except ValueError:
         raise Exception(
             "Your sudo or dev users list does not contain valid integers.")
 
     try:
-        DEMONS = set(int(x) for x in os.environ.get("DEMONS", "").split())
+        DEMONS = {int(x) for x in os.environ.get("DEMONS", "").split()}
     except ValueError:
         raise Exception(
             "Your support users list does not contain valid integers.")
 
     try:
-        WOLVES = set(int(x) for x in os.environ.get("WOLVES", "").split())
+        WOLVES = {int(x) for x in os.environ.get("WOLVES", "").split()}
     except ValueError:
         raise Exception(
             "Your whitelisted users list does not contain valid integers.")
 
     try:
-        TIGERS = set(int(x) for x in os.environ.get("TIGERS", "").split())
+        TIGERS = {int(x) for x in os.environ.get("TIGERS", "").split()}
     except ValueError:
         raise Exception(
             "Your tiger users list does not contain valid integers.")
@@ -106,7 +104,7 @@ if ENV:
     BOT_ID = 1837980174
 
     try:
-        BL_CHATS = set(int(x) for x in os.environ.get('BL_CHATS', "").split())
+        BL_CHATS = {int(x) for x in os.environ.get('BL_CHATS', "").split()}
     except ValueError:
         raise Exception(
             "Your blacklisted chats list does not contain valid integers.")
@@ -124,26 +122,26 @@ else:
     OWNER_USERNAME = Config.OWNER_USERNAME
 
     try:
-        DRAGONS = set(int(x) for x in Config.DRAGONS or [])
-        DEV_USERS = set(int(x) for x in Config.DEV_USERS or [])
+        DRAGONS = {int(x) for x in Config.DRAGONS or []}
+        DEV_USERS = {int(x) for x in Config.DEV_USERS or []}
     except ValueError:
         raise Exception(
             "Your sudo or dev users list does not contain valid integers.")
 
     try:
-        DEMONS = set(int(x) for x in Config.DEMONS or [])
+        DEMONS = {int(x) for x in Config.DEMONS or []}
     except ValueError:
         raise Exception(
             "Your support users list does not contain valid integers.")
 
     try:
-        WOLVES = set(int(x) for x in Config.WOLVES or [])
+        WOLVES = {int(x) for x in Config.WOLVES or []}
     except ValueError:
         raise Exception(
             "Your whitelisted users list does not contain valid integers.")
 
     try:
-        TIGERS = set(int(x) for x in Config.TIGERS or [])
+        TIGERS = {int(x) for x in Config.TIGERS or []}
     except ValueError:
         raise Exception(
             "Your tiger users list does not contain valid integers.")
@@ -174,16 +172,16 @@ else:
     SPAMWATCH_SUPPORT_CHAT = Config.SPAMWATCH_SUPPORT_CHAT
     SPAMWATCH_API = Config.SPAMWATCH_API
     INFOPIC = Config.INFOPIC
-    DB_URI = Config.DATABASE_URL 
+    DB_URI = Config.DATABASE_URL
     REDIS_URL = Config.REDIS_URL
     MONGO_DB_URI = Config.MONGO_DB_URI
-    MONGO_PORT = Config.MONGO_PORT 
+    MONGO_PORT = Config.MONGO_PORT
     ARQ_API_KEY = Config.ARQ_API_KEY
     ARQ_API_URL = Config.ARQ_API_URL
     MONGO_DB = Config.MONGO_DB
     BOT_ID = Config.BOT_ID
     try:
-        BL_CHATS = set(int(x) for x in Config.BL_CHATS or [])
+        BL_CHATS = {int(x) for x in Config.BL_CHATS or []}
     except ValueError:
         raise Exception(
             "Your blacklisted chats list does not contain valid integers.")

@@ -62,28 +62,24 @@ async def hmm(_, message):
         message.continue_propagation()
     status = message.text.split(None, 1)[1]
     chat_id = message.chat.id
-    if status == "ON" or status == "on" or status == "On":
+    if status in ["ON", "on", "On"]:
         lel = await edit_or_reply(message, "`Processing...`")
         lol = add_chat(int(message.chat.id))
         if not lol:
             await lel.edit("Sung Jinwoo AI Already Activated In This Chat")
             return
-        await lel.edit(
-            f"Sung Jinwoo AI Successfully Added For Users In The Chat"
-        )
+        await lel.edit('Sung Jinwoo AI Successfully Added For Users In The Chat')
 
-    elif status == "OFF" or status == "off" or status == "Off":
+    elif status in ["OFF", "off", "Off"]:
         lel = await edit_or_reply(message, "`Processing...`")
         Escobar = remove_chat(int(message.chat.id))
         if not Escobar:
             await lel.edit("SUNG AI Was Not Activated In This Chat")
             return
-        await lel.edit(
-            f"Sung Jinwoo AI Successfully Deactivated For Users In The Chat"
-        )
+        await lel.edit('Sung Jinwoo AI Successfully Deactivated For Users In The Chat')
 
-    elif status == "EN" or status == "en" or status == "english":
-        if not chat_id in en_chats:
+    elif status in ["EN", "en", "english"]:
+        if chat_id not in en_chats:
             en_chats.append(chat_id)
             await message.reply_text("English AI chat Enabled!")
             return
@@ -127,7 +123,7 @@ async def hmm(client, message):
         test = test.replace("Hello there I am SungJinWoo...nice to meet u", "Hi, my friend! Do you want me to tell you a joke?")
         test = test.replace("@The_Pirate_Huntee is my owner" , "Have the control right.")
         test = test.replace("Hi, My name is SungJinWoo Nice to meet you." , "Hi, my friend, what can I do for you today?")
-       
+
         response = await lunaQuery(
             test, message.from_user.id if message.from_user else 0
         )
@@ -138,12 +134,6 @@ async def hmm(client, message):
         response = response.replace("Have the control right." , "@The_Pirate_Hunter is my owner.")
         response = response.replace("Hi, my friend, what can I do for you today?" , "Hi, My name is SungJinWoo Nice to meet you")
         pro = response
-        try:
-            await daisyx.send_chat_action(message.chat.id, "typing")
-            await message.reply_text(pro)
-        except CFError:
-            return
-
     else:
         u = msg.split()
         emj = extract_emojis(msg)
@@ -179,7 +169,7 @@ async def hmm(client, message):
         except:
             return
         test = rm
-        if not "en" in lan and not lan == "":
+        if "en" not in lan and lan != "":
             try:
                 test = translator.translate(test, dest="en")
                 test = test.text
@@ -205,17 +195,17 @@ async def hmm(client, message):
         response = response.replace("Have the control right." , "@The_Pirate_Hunter is my owner.")
         response = response.replace("Hi, my friend, what can I do for you today?" , "Hi, My name is SungJinWoo Nice to meet you")
         pro = response
-        if not "en" in lan and not lan == "":
+        if "en" not in lan and lan != "":
             try:
                 pro = translator.translate(pro, dest=lan)
                 pro = pro.text
             except:
                 return
-        try:
-            await daisyx.send_chat_action(message.chat.id, "typing")
-            await message.reply_text(pro)
-        except CFError:
-            return
+    try:
+        await daisyx.send_chat_action(message.chat.id, "typing")
+        await message.reply_text(pro)
+    except CFError:
+        return
 
 
 @daisyx.on_message(
@@ -259,7 +249,7 @@ async def inuka(client, message):
     except:
         return
     test = rm
-    if not "en" in lan and not lan == "":
+    if "en" not in lan and lan != "":
         try:
             test = translator.translate(test, dest="en")
             test = test.text
@@ -285,7 +275,7 @@ async def inuka(client, message):
     response = response.replace("Hi, my friend, what can I do for you today?" , "Hi, My name is SungJinWoo Nice to meet you")
 
     pro = response
-    if not "en" in lan and not lan == "":
+    if "en" not in lan and lan != "":
         pro = translator.translate(pro, dest=lan)
         pro = pro.text
     try:
@@ -342,7 +332,7 @@ async def inuka(client, message):
     except:
         return
     test = rm
-    if not "en" in lan and not lan == "":
+    if "en" not in lan and lan != "":
         try:
             test = translator.translate(test, dest="en")
             test = test.text
@@ -367,7 +357,7 @@ async def inuka(client, message):
     response = response.replace("Hi, my friend, what can I do for you today?" , "Hi, My name is SungJinWoo Nice to meet you")
 
     pro = response
-    if not "en" in lan and not lan == "":
+    if "en" not in lan and lan != "":
         try:
             pro = translator.translate(pro, dest=lan)
             pro = pro.text

@@ -51,10 +51,7 @@ else:
     
 
 def get_str_key(name, required=False):
-    if name in DEFAULTS:
-        default = DEFAULTS[name]
-    else:
-        default = None
+    default = DEFAULTS[name] if name in DEFAULTS else None
     if not (data := env.str(name, default=default)) and not required:
         log.warning('No str key: ' + name)
         return None
@@ -66,10 +63,7 @@ def get_str_key(name, required=False):
 
 
 def get_int_key(name, required=False):
-    if name in DEFAULTS:
-        default = DEFAULTS[name]
-    else:
-        default = None
+    default = DEFAULTS[name] if name in DEFAULTS else None
     if not (data := env.int(name, default=default)) and not required:
         log.warning('No int key: ' + name)
         return None
@@ -81,10 +75,7 @@ def get_int_key(name, required=False):
 
 
 def get_list_key(name, required=False):
-    if name in DEFAULTS:
-        default = DEFAULTS[name]
-    else:
-        default = None
+    default = DEFAULTS[name] if name in DEFAULTS else None
     if not (data := env.list(name, default=default)) and not required:
         log.warning('No list key: ' + name)
         return []
@@ -96,10 +87,7 @@ def get_list_key(name, required=False):
 
 
 def get_bool_key(name, required=False):
-    if name in DEFAULTS:
-        default = DEFAULTS[name]
-    else:
-        default = None
+    default = DEFAULTS[name] if name in DEFAULTS else None
     if not (data := env.bool(name, default=default)) and not required:
         log.warning('No bool key: ' + name)
         return False
